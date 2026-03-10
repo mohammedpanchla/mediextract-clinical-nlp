@@ -9,7 +9,6 @@
 
 ---
 
-# 🏥 MediExtract — Clinical Intelligence Platform
 ### LLM-Powered Structured Extraction from Unstructured Clinical Notes (FastAPI + Llama 3.3 70B)
 
 ---
