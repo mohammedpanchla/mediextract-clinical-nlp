@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MediExtract — Clinical Intelligence Platform</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Instrument+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:         #f4f1ec;
+      --surface:    #faf8f5;
+      --border:     #ddd8ce;
+      --ink:        #1a1714;
+      --ink2:       #5c574f;
+      --ink3:       #9e9890;
+      --accent:     #1a3a2e;
+      --accent2:    #2d6a4f;
+      --found:      #2d6a4f;
+      --null:       #c4bdb4;
+      --warn:       #8b4513;
+      --tag-bg:     #e8f4f0;
+      --tag-border: #a8d5c0;
+      --tag-text:   #1a3a2e;
+      --sum-bg:     #f0f7f4;
+      --sum-border: #c2ddd4;
+      --copy-ok:    #2d6a4f;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Instrument Sans', sans-serif;
+      background: var(--bg); color: var(--ink);
+      min-height: 100vh; overflow-x: hidden;
+    }
+
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.032'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0;
+    }
+
+    /* HEADER */
+    header {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(244,241,236,0.94); backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 48px; height: 62px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .header-left { display: flex; align-items: baseline; gap: 16px; }
+    .logo {
+      font-family: 'DM Serif Display', serif;
+      font-size: 20px; color: var(--accent); letter-spacing: -0.3px;
+    }
+    .logo sup {
+      font-family: 'Instrument Sans', sans-serif;
+      font-size: 9px; font-weight: 600; letter-spacing: 2px;
+      color: var(--ink3); text-transform: uppercase;
+      vertical-align: super; margin-left: 3px;
+    }
+    .hdivider { width: 1px; height: 18px; background: var(--border); }
+    .header-sub {
+      font-size: 11px; font-weight: 500;
+      letter-spacing: 2.5px; text-transform: uppercase; color: var(--ink3);
+    }
+    .model-pill {
+      display: flex; align-items: center; gap: 7px;
+      font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 500;
+      color: var(--accent2); background: var(--tag-bg);
+      border: 1px solid var(--tag-border); padding: 5px 13px; border-radius: 2px;
+    }
+    .pulse {
+      width: 6px; height: 6px; background: var(--found);
+      border-radius: 50%; animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.75)}
+    }
+
+    /* HERO */
+    .hero {
+      max-width: 1200px; margin: 0 auto;
+      padding: 60px 48px 44px; position: relative; z-index: 1;
+    }
+    .eyebrow {
+      font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 500;
+      letter-spacing: 3px; text-transform: uppercase; color: var(--accent2);
+      margin-bottom: 16px; display: flex; align-items: center; gap: 10px;
+    }
+    .eyebrow::before {
+      content: ''; display: inline-block; width: 24px; height: 1px; background: var(--accent2);
+    }
+    .hero h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(34px, 4.5vw, 54px); line-height: 1.09; color: var(--ink);
+      letter-spacing: -0.8px; margin-bottom: 14px; max-width: 600px;
+    }
+    .hero h1 em { font-style: italic; color: var(--accent2); }
+    .hero p {
+      font-size: 14.5px; color: var(--ink2); line-height: 1.75;
+      max-width: 500px; font-weight: 300;
+    }
+
+    .section-rule {
+      height: 1px; max-width: 1104px; margin: 0 auto 36px;
+      background: linear-gradient(90deg, var(--accent2), var(--border) 45%, transparent);
+      position: relative; z-index: 1;
+    }
+
+    /* WORKSPACE */
+    .workspace {
+      max-width: 1200px; margin: 0 auto;
+      padding: 0 48px 80px;
+      display: grid; grid-template-columns: 1fr 1fr;
+      position: relative; z-index: 1;
+    }
+    .panel { background: var(--surface); border: 1px solid var(--border); }
+    .panel-left  { border-radius: 4px 0 0 4px; border-right: none; }
+    .panel-right { border-radius: 0 4px 4px 0; }
+
+    .panel-head {
+      padding: 18px 28px 16px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .panel-lbl {
+      font-family: 'DM Mono', monospace; font-size: 9px; font-weight: 500;
+      letter-spacing: 3px; text-transform: uppercase; color: var(--ink3);
+    }
+    .panel-num {
+      font-family: 'DM Serif Display', serif; font-size: 12px; color: var(--border);
+    }
+
+    /* INPUT */
+    .input-wrap { padding: 22px 28px 0; }
+    textarea {
+      width: 100%; height: 330px; background: transparent;
+      border: 1px solid var(--border); border-radius: 3px;
+      font-family: 'DM Mono', monospace; font-size: 12px;
+      font-weight: 300; color: var(--ink); line-height: 1.85;
+      padding: 16px 18px; resize: none; outline: none; transition: border-color 0.2s;
+    }
+    textarea:focus { border-color: var(--accent2); }
+    textarea::placeholder { color: var(--ink3); font-style: italic; }
+
+    .actions { padding: 16px 28px 28px; display: flex; flex-direction: column; gap: 9px; }
+
+    .action-row { display: flex; gap: 9px; }
+
+    .btn-primary {
+      flex: 1; padding: 14px 16px;
+      background: var(--accent); color: #f4f1ec;
+      border: none; border-radius: 3px;
+      font-family: 'Instrument Sans', sans-serif;
+      font-size: 12px; font-weight: 600; letter-spacing: 1.5px;
+      text-transform: uppercase; cursor: pointer;
+      transition: background 0.18s, transform 0.1s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-primary:hover { background: var(--accent2); }
+    .btn-primary:active { transform: scale(0.997); }
+    .btn-primary:disabled { opacity: 0.48; cursor: not-allowed; transform: none; }
+
+    .btn-clear {
+      padding: 14px 16px;
+      background: transparent; color: var(--ink3);
+      border: 1px solid var(--border); border-radius: 3px;
+      font-family: 'Instrument Sans', sans-serif;
+      font-size: 12px; font-weight: 500; cursor: pointer;
+      transition: border-color 0.18s, color 0.18s;
+      display: flex; align-items: center; gap: 6px;
+      white-space: nowrap;
+    }
+    .btn-clear:hover { border-color: var(--warn); color: var(--warn); }
+
+    .btn-ghost {
+      width: 100%; padding: 11px 20px; background: transparent; color: var(--ink2);
+      border: 1px solid var(--border); border-radius: 3px;
+      font-family: 'Instrument Sans', sans-serif; font-size: 12px; font-weight: 500;
+      cursor: pointer; transition: border-color 0.18s, color 0.18s;
+    }
+    .btn-ghost:hover { border-color: var(--accent2); color: var(--accent); }
+
+    /* OUTPUT */
+    .out-body {
+      padding: 22px 28px; min-height: 430px; max-height: 600px; overflow-y: auto;
+    }
+    .out-body::-webkit-scrollbar { width: 3px; }
+    .out-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    /* PLACEHOLDER */
+    .placeholder {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      height: 380px; gap: 14px; color: var(--ink3);
+    }
+    .ph-icon {
+      width: 52px; height: 52px; border: 1px solid var(--border); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; font-size: 20px;
+    }
+    .placeholder p { font-size: 12.5px; font-weight: 300; }
+
+    /* LOADING */
+    .loading {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; height: 380px; gap: 18px;
+    }
+    .bars { display: flex; gap: 4px; align-items: flex-end; height: 30px; }
+    .bars span { width: 3px; background: var(--accent2); border-radius: 2px; animation: bar 1s ease-in-out infinite; }
+    .bars span:nth-child(1){animation-delay:0s}
+    .bars span:nth-child(2){animation-delay:0.15s}
+    .bars span:nth-child(3){animation-delay:0.3s}
+    .bars span:nth-child(4){animation-delay:0.45s}
+    .bars span:nth-child(5){animation-delay:0.6s}
+    @keyframes bar { 0%,100%{height:6px;opacity:0.35}50%{height:26px;opacity:1} }
+    .load-lbl {
+      font-family: 'DM Mono', monospace; font-size: 10px;
+      letter-spacing: 2.5px; text-transform: uppercase; color: var(--ink3);
+    }
+    .load-step { font-size: 12px; color: var(--ink3); font-weight: 300; }
+
+    /* ── SUMMARY CARD (COLLAPSIBLE) ── */
+    .summary-card {
+      border-radius: 4px; margin-bottom: 20px;
+      animation: fadeUp 0.4s ease both; overflow: hidden;
+      border: 1.5px solid var(--accent2);
+    }
+
+    .summary-toggle {
+      width: 100%; padding: 12px 16px;
+      background: var(--accent); border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px;
+    }
+    .summary-toggle:hover { background: var(--accent2); }
+
+    .summary-toggle-left {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .summary-toggle-label {
+      font-family: 'DM Mono', monospace; font-size: 9px; font-weight: 600;
+      letter-spacing: 3px; text-transform: uppercase; color: #e8f4f0;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .summary-toggle-label::before {
+      content: '⚕'; font-size: 11px; color: #a8d5c0;
+    }
+
+    .summary-toggle-right {
+      display: flex; align-items: center; gap: 10px;
+    }
+
+    .chevron {
+      font-size: 11px; color: #a8d5c0;
+      transition: transform 0.28s ease;
+      display: inline-block; line-height: 1;
+    }
+    .chevron.collapsed { transform: rotate(-90deg); }
+
+    .summary-body {
+      padding: 16px;
+      max-height: 600px; overflow: hidden;
+      background: var(--sum-bg);
+      transition: max-height 0.35s ease, padding 0.28s ease, opacity 0.28s ease;
+      opacity: 1;
+    }
+    .summary-body.collapsed {
+      max-height: 0; padding-top: 0; padding-bottom: 0; opacity: 0;
+    }
+
+    .summary-text {
+      font-family: 'DM Serif Display', serif;
+      font-size: 14px; color: var(--ink); line-height: 1.85; font-style: italic;
+    }
+
+    /* ── COPY BUTTON LIGHT (for dark header) ── */
+    .btn-copy-light {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 5px 11px;
+      background: rgba(255,255,255,0.15); color: #ffffff;
+      border: 1px solid rgba(255,255,255,0.35); border-radius: 2px;
+      font-family: 'DM Mono', monospace; font-size: 9px; font-weight: 600;
+      letter-spacing: 1.5px; text-transform: uppercase;
+      cursor: pointer; transition: all 0.18s; white-space: nowrap;
+    }
+    .btn-copy-light:hover { background: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.6); }
+    .btn-copy-light.copied { background: rgba(168,213,192,0.3); color: #c8f0e0; border-color: #a8d5c0; }
+
+    /* ── COPY BUTTON ── */
+    .btn-copy {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 9px;
+      background: transparent; color: var(--ink3);
+      border: 1px solid var(--border); border-radius: 2px;
+      font-family: 'DM Mono', monospace; font-size: 9px; font-weight: 500;
+      letter-spacing: 1px; text-transform: uppercase;
+      cursor: pointer; transition: all 0.18s;
+      white-space: nowrap;
+    }
+    .btn-copy:hover { border-color: var(--accent2); color: var(--accent2); }
+    .btn-copy.copied {
+      border-color: var(--copy-ok); color: var(--copy-ok);
+      background: var(--tag-bg);
+    }
+
+    /* DOC BADGE */
+    .doc-badge {
+      display: inline-flex; align-items: center; gap: 7px;
+      font-family: 'DM Mono', monospace; font-size: 9px; font-weight: 500;
+      letter-spacing: 2.5px; text-transform: uppercase;
+      color: var(--accent2); border: 1px solid var(--tag-border);
+      background: var(--tag-bg); padding: 5px 12px;
+      border-radius: 2px; margin-bottom: 16px;
+    }
+
+    /* FIELD SECTION HEADER */
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 0 6px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 2px;
+    }
+    .section-header-lbl {
+      font-family: 'DM Mono', monospace; font-size: 8px; font-weight: 500;
+      letter-spacing: 2.5px; text-transform: uppercase; color: var(--null);
+    }
+
+    /* FIELD ROWS */
+    .field-row {
+      display: grid; grid-template-columns: 148px 1fr auto;
+      align-items: start; gap: 12px;
+      padding: 12px 0; border-bottom: 1px solid var(--border);
+      animation: fadeUp 0.28s ease both;
+    }
+    .field-row:last-child { border-bottom: none; }
+
+    @keyframes fadeUp {
+      from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)}
+    }
+
+    .fkey {
+      font-family: 'DM Mono', monospace; font-size: 9px; font-weight: 500;
+      letter-spacing: 2px; text-transform: uppercase; color: var(--ink3); padding-top: 2px;
+    }
+    .fval { font-size: 13px; color: var(--ink); font-weight: 400; line-height: 1.55; }
+    .fval.null { font-style: italic; color: var(--null); font-size: 12px; }
+
+    .tags { display: flex; flex-wrap: wrap; gap: 5px; }
+    .tag {
+      font-family: 'DM Mono', monospace; font-size: 10.5px;
+      color: var(--tag-text); background: var(--tag-bg);
+      border: 1px solid var(--tag-border); padding: 3px 9px; border-radius: 2px;
+    }
+
+    .vitals { display: flex; flex-wrap: wrap; gap: 5px; }
+    .vital-chip {
+      font-family: 'DM Mono', monospace; font-size: 10px; color: var(--ink2);
+      background: var(--bg); border: 1px solid var(--border); padding: 3px 9px; border-radius: 2px;
+    }
+
+    .row-actions { display: flex; align-items: flex-start; gap: 6px; padding-top: 1px; }
+
+    .dot { width: 6px; height: 6px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+    .dot-found { background: var(--found); }
+    .dot-null  { background: var(--null); }
+
+    /* EXPORT BAR */
+    .export-bar {
+      margin-top: 20px; padding-top: 18px;
+      border-top: 1px solid var(--border);
+      display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+      animation: fadeUp 0.4s ease 0.5s both;
+    }
+    .export-lbl {
+      font-family: 'DM Mono', monospace; font-size: 9px; font-weight: 500;
+      letter-spacing: 2px; text-transform: uppercase; color: var(--ink3); margin-right: 2px;
+    }
+    .btn-export {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 14px; background: transparent; color: var(--ink2);
+      border: 1px solid var(--border); border-radius: 3px;
+      font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 500;
+      letter-spacing: 0.5px; cursor: pointer;
+      transition: border-color 0.18s, color 0.18s, background 0.18s;
+    }
+    .btn-export:hover { border-color: var(--accent2); color: var(--accent); background: var(--tag-bg); }
+    .btn-export.copied { border-color: var(--copy-ok); color: var(--copy-ok); background: var(--tag-bg); }
+
+    .export-sep {
+      width: 1px; height: 20px; background: var(--border); margin: 0 2px;
+    }
+
+    /* ERROR */
+    .err {
+      margin: 16px 0; padding: 14px 18px;
+      background: #fdf0ec; border: 1px solid #e8c4b0;
+      border-radius: 3px; font-size: 12.5px; color: var(--warn);
+      font-family: 'DM Mono', monospace;
+    }
+
+    /* FOOTER */
+    footer {
+      position: relative; z-index: 1; border-top: 1px solid var(--border);
+      padding: 14px 48px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .ft-l {
+      font-family: 'DM Mono', monospace; font-size: 9px;
+      letter-spacing: 2px; text-transform: uppercase; color: var(--ink3);
+    }
+    .ft-r { font-size: 11px; color: var(--null); font-weight: 300; }
+
+    /* COPY ICON SVG */
+    .ico { display: inline-block; vertical-align: middle; }
+
+    @media(max-width:860px){
+      header,.hero,footer{padding-left:24px;padding-right:24px}
+      .workspace{grid-template-columns:1fr;padding:0 24px 60px}
+      .panel-left{border-radius:4px 4px 0 0;border-right:1px solid var(--border);border-bottom:none}
+      .panel-right{border-radius:0 0 4px 4px}
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="logo">MediExtract<sup>AI</sup></div>
+    <div class="hdivider"></div>
+    <div class="header-sub">Clinical Intelligence Platform</div>
+  </div>
+  <div class="model-pill">
+    <div class="pulse"></div>
+    Llama 3.3 · 70B · Groq
+  </div>
+</header>
+
+<div class="hero">
+  <div class="eyebrow">Structured Clinical Extraction</div>
+  <h1>Turn clinical notes into<br/><em>structured intelligence</em></h1>
+  <p>Paste any discharge summary, referral letter, or clinical note. Our AI extracts every key field and generates a concise clinical summary — instantly.</p>
+</div>
+
+<div class="section-rule"></div>
+
+<div class="workspace">
+
+  <!-- INPUT PANEL -->
+  <div class="panel panel-left">
+    <div class="panel-head">
+      <span class="panel-lbl">Clinical Document Input</span>
+      <span class="panel-num">01</span>
+    </div>
+    <div class="input-wrap">
+      <textarea id="noteInput" placeholder="Paste discharge summary, referral letter, or clinical note here…&#10;&#10;Example: Patient is a 54 year old female admitted with acute shortness of breath, history of COPD and hypertension…"></textarea>
+    </div>
+    <div class="actions">
+      <div class="action-row">
+        <button class="btn-primary" id="extractBtn" onclick="extractNote()">
+          <svg class="ico" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          Analyse Document
+        </button>
+        <button class="btn-clear" onclick="clearAll()" title="Clear everything">
+          <svg class="ico" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          Clear All
+        </button>
+      </div>
+      <button class="btn-ghost" onclick="loadSample()">Load Sample Discharge Summary</button>
+    </div>
+  </div>
+
+  <!-- OUTPUT PANEL -->
+  <div class="panel panel-right">
+    <div class="panel-head">
+      <span class="panel-lbl">Extracted Clinical Data</span>
+      <span class="panel-num">02</span>
+    </div>
+    <div class="out-body" id="outBody">
+      <div class="placeholder">
+        <div class="ph-icon">⚕</div>
+        <p>Awaiting clinical document</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <div class="ft-l">MediExtract · Research Use Only · Not a Clinical Device</div>
+  <div class="ft-r">Powered by Llama 3.3 · 70B via Groq</div>
+</footer>
+
+<script>
+// ── ICONS ──
+const ICON_COPY = `<svg class="ico" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+const ICON_CHECK = `<svg class="ico" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`;
+const ICON_DL = `<svg class="ico" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
+
+// ── SAMPLE ──
+const SAMPLE = `DISCHARGE SUMMARY
+
+Patient Name: James Harrington
+DOB: 14/03/1957  |  Age: 67 years  |  Gender: Male
+Ward: Cardiology — Bay 4  |  Consultant: Dr. A. Mehta
+
+ADMISSION DATE: 12 February 2026
+DISCHARGE DATE: 17 February 2026  |  Length of Stay: 5 days
+
+PRESENTING COMPLAINT:
+Patient presented via Emergency Department with sudden onset severe central chest pain radiating to the left arm, associated with diaphoresis and nausea. Pain onset approximately 2 hours prior to arrival.
+
+PAST MEDICAL HISTORY:
+- Hypertension (diagnosed 2018)
+- Type 2 Diabetes Mellitus (diagnosed 2015)
+- Hyperlipidaemia
+- Ex-smoker (ceased 2010, 20 pack-year history)
+
+ON ADMISSION OBSERVATIONS:
+BP: 168/94 mmHg | Heart Rate: 98 bpm | RR: 18/min
+Temperature: 36.9 degrees C | SpO2: 95% on air
+
+INVESTIGATIONS:
+ECG: ST elevation in leads II, III, aVF consistent with inferior STEMI
+Troponin I: 2.4 ng/mL (elevated)
+Echocardiogram: Mild inferior wall hypokinesia, EF 52%
+
+DIAGNOSIS:
+Inferior ST-Elevation Myocardial Infarction (STEMI)
+
+TREATMENT:
+Emergency percutaneous coronary intervention (PCI) performed.
+Drug-eluting stent deployed to right coronary artery (RCA). Procedure uncomplicated.
+
+MEDICATIONS ON DISCHARGE:
+- Aspirin 75mg once daily (lifelong)
+- Clopidogrel 75mg once daily (12 months)
+- Atorvastatin 80mg once daily
+- Bisoprolol 2.5mg once daily
+- Ramipril 5mg once daily
+- Metformin 500mg twice daily (continued)
+
+DISCHARGE PLAN:
+Patient discharged in stable condition. Advised to avoid driving for 4 weeks.
+Cardiac rehabilitation programme referral submitted.
+
+FOLLOW-UP:
+Outpatient cardiology review in 4 weeks. Repeat echocardiogram at 3 months.
+GP to review medications at 2 weeks.`;
+
+let lastExtracted = null;
+let summaryOpen = true;
+
+// ── LOAD SAMPLE ──
+function loadSample() {
+  document.getElementById('noteInput').value = SAMPLE;
+}
+
+// ── CLEAR ALL ──
+function clearAll() {
+  document.getElementById('noteInput').value = '';
+  lastExtracted = null;
+  summaryOpen = true;
+  document.getElementById('outBody').innerHTML = `
+    <div class="placeholder">
+      <div class="ph-icon">⚕</div>
+      <p>Awaiting clinical document</p>
+    </div>`;
+}
+
+// ── COPY HELPER ──
+function copyText(text, btn) {
+  navigator.clipboard.writeText(text).then(() => {
+    const original = btn.innerHTML;
+    btn.innerHTML = `${ICON_CHECK} Copied`;
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.innerHTML = original;
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+}
+
+// ── TOGGLE SUMMARY ──
+function toggleSummary() {
+  summaryOpen = !summaryOpen;
+  const body = document.getElementById('summaryBody');
+  if (body) {
+    body.classList.toggle('collapsed', !summaryOpen);
+  }
+  // Update toggle button appearance
+  const toggle = document.querySelector('.summary-toggle');
+  if (toggle) {
+    toggle.title = summaryOpen ? 'Collapse summary' : 'Expand summary';
+  }
+}
+
+// ── EXTRACT ──
+async function extractNote() {
+  const text = document.getElementById('noteInput').value.trim();
+  if (!text) { alert('Please paste a clinical note first.'); return; }
+
+  const btn = document.getElementById('extractBtn');
+  const body = document.getElementById('outBody');
+
+  btn.disabled = true;
+  btn.innerHTML = `<svg class="ico" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> Analysing…`;
+
+  body.innerHTML = `
+    <div class="loading">
+      <div class="bars"><span></span><span></span><span></span><span></span><span></span></div>
+      <div class="load-lbl" id="loadLbl">Extracting clinical fields</div>
+      <div class="load-step" id="loadStep">Reading document structure…</div>
+    </div>`;
+
+  try {
+    // Step 1 — extract fields
+    const extractRes = await fetch('/extract', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    });
+    const extractData = await extractRes.json();
+
+    if (!extractData.success) {
+      body.innerHTML = `<div class="err">⚠ ${extractData.error || 'Extraction failed.'}</div>`;
+      return;
+    }
+
+    lastExtracted = extractData.data;
+
+    const lbl = document.getElementById('loadLbl');
+    const step = document.getElementById('loadStep');
+    if (lbl) lbl.textContent = 'Generating summary';
+    if (step) step.textContent = 'Writing clinical narrative…';
+
+    // Step 2 — summarise
+    const summaryRes = await fetch('/summarise', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: lastExtracted })
+    });
+    const summaryData = await summaryRes.json();
+    const summary = summaryData.success ? summaryData.summary : null;
+
+    summaryOpen = true;
+    renderOutput(body, lastExtracted, summary);
+
+  } catch(e) {
+    body.innerHTML = `<div class="err">⚠ Connection error. Ensure the server is running.</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `<svg class="ico" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> Analyse Document`;
+  }
+}
+
+// ── RENDER ──
+function renderOutput(body, d, summary) {
+  const isNull = v => v === null || v === undefined || v === '' || (Array.isArray(v) && !v.length);
+
+  const tagGroup = (items) => {
+    if (!items || !items.length) return `<span class="fval null">Not recorded</span>`;
+    return `<div class="tags">${items.map(i => `<span class="tag">${i}</span>`).join('')}</div>`;
+  };
+
+  const vitalsBlock = (obj) => {
+    if (!obj || !Object.keys(obj).length) return `<span class="fval null">Not recorded</span>`;
+    return `<div class="vitals">${Object.entries(obj).map(([k,v]) =>
+      `<span class="vital-chip">${k.replace(/_/g,' ')}: ${v}</span>`).join('')}</div>`;
+  };
+
+  const copyableText = (value, type) => {
+    if (type === 'tags' && Array.isArray(value)) return value.join(', ');
+    if (type === 'vitals' && typeof value === 'object') return Object.entries(value).map(([k,v]) => `${k}: ${v}`).join(', ');
+    return value ? String(value) : '';
+  };
+
+  const row = (key, value, type='text', delay=0, showCopy=false) => {
+    const found = !isNull(value);
+    let content = '';
+    if (type === 'tags')        content = tagGroup(value);
+    else if (type === 'vitals') content = vitalsBlock(value);
+    else content = found
+      ? `<span class="fval">${value}</span>`
+      : `<span class="fval null">Not mentioned</span>`;
+
+    const copyBtn = (found && showCopy)
+      ? `<button class="btn-copy" onclick="copyText('${copyableText(value,type).replace(/'/g,"\\'")}', this)">${ICON_COPY} Copy</button>`
+      : '';
+
+    return `
+      <div class="field-row" style="animation-delay:${delay}ms">
+        <div class="fkey">${key}</div>
+        <div>${content}</div>
+        <div class="row-actions">
+          ${copyBtn}
+          <div class="dot ${found ? 'dot-found' : 'dot-null'}"></div>
+        </div>
+      </div>`;
+  };
+
+  // Summary card with collapse toggle + copy
+  const summaryHtml = summary ? `
+    <div class="summary-card">
+      <button class="summary-toggle" onclick="toggleSummary()">
+        <div class="summary-toggle-left">
+          <span class="summary-toggle-label">AI Clinical Summary</span>
+        </div>
+        <div class="summary-toggle-right">
+          <button class="btn-copy-light" onclick="event.stopPropagation(); copyText(${JSON.stringify(summary)}, this)">
+            ${ICON_COPY} Copy Summary
+          </button>
+        </div>
+      </button>
+      <div class="summary-body" id="summaryBody">
+        <div class="summary-text">${summary}</div>
+      </div>
+    </div>` : '';
+
+  body.innerHTML = `
+    ${summaryHtml}
+    <div class="doc-badge">⚕ ${d.document_type || 'Clinical Document'}</div>
+    <div>
+      ${row('Patient Age',      d.patient_age ? d.patient_age + ' years' : null, 'text',   0,  false)}
+      ${row('Gender',           d.patient_gender,   'text',   50, false)}
+      ${row('Admission Reason', d.admission_reason, 'text',  100, true)}
+      ${row('Diagnoses',        d.conditions,       'tags',  150, true)}
+      ${row('Medications',      d.medications,      'tags',  200, true)}
+      ${row('Blood Pressure',   d.blood_pressure,   'text',  250, true)}
+      ${row('Key Vitals',       d.key_vitals,       'vitals',300, true)}
+      ${row('Hospital Stay',    d.hospital_stay_days ? d.hospital_stay_days + ' days' : null, 'text', 350, false)}
+      ${row('Discharge Plan',   d.discharge_plan,   'text',  400, true)}
+      ${row('Follow Up',        d.follow_up,        'text',  450, true)}
+    </div>
+    <div class="export-bar">
+      <span class="export-lbl">Export</span>
+      <button class="btn-export" onclick="exportJSON()">
+        ${ICON_DL} Download JSON
+      </button>
+      <button class="btn-export" onclick="exportCSV()">
+        ${ICON_DL} Download CSV
+      </button>
+      <div class="export-sep"></div>
+      <button class="btn-export" id="copyJsonBtn" onclick="copyJSON(this)">
+        ${ICON_COPY} Copy JSON
+      </button>
+    </div>`;
+}
+
+// ── EXPORT JSON ──
+function exportJSON() {
+  if (!lastExtracted) return;
+  const blob = new Blob([JSON.stringify(lastExtracted, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = `mediextract_${Date.now()}.json`; a.click();
+}
+
+// ── EXPORT CSV ──
+function exportCSV() {
+  if (!lastExtracted) return;
+  const d = lastExtracted;
+  const flatten = v => {
+    if (!v && v !== 0) return '';
+    if (Array.isArray(v)) return v.join(' | ');
+    if (typeof v === 'object') return Object.entries(v).map(([k,val]) => `${k}: ${val}`).join(' | ');
+    return String(v);
+  };
+  const headers = ['patient_age','patient_gender','admission_reason','conditions',
+    'medications','blood_pressure','key_vitals','hospital_stay_days','discharge_plan','follow_up','document_type'];
+  const csv = headers.join(',') + '\n' + headers.map(h => `"${flatten(d[h])}"`).join(',');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = `mediextract_${Date.now()}.csv`; a.click();
+}
+
+// ── COPY JSON ──
+function copyJSON(btn) {
+  if (!lastExtracted) return;
+  copyText(JSON.stringify(lastExtracted, null, 2), btn);
+}
+</script>
+</body>
+</html>
